@@ -1,4 +1,4 @@
-package fr.bipi.lib.splash;
+package fr.bipi.samples.splash.simple;
 
 import org.junit.Test;
 

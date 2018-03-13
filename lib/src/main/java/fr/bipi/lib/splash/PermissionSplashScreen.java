@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import hugo.weaving.DebugLog;
 import timber.log.Timber;
 
 
@@ -89,32 +88,10 @@ public class PermissionSplashScreen extends SplashScreenBase
      * @param sep String separator
      * @return Concatenated string
      */
-    public static String concatString(List<String> in, String sep) {
+    public static String concatString(Collection<String> in, String sep) {
         StringBuilder sb = new StringBuilder();
         for (String tmp : in) {
             sb.append(tmp).append(sep);
-        }
-        if (sb.length() > 0) {
-            sb.setLength(sb.length() - sep.length());
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Concat strings
-     *
-     * @param in  list of strings to concatenate
-     * @param sep String separator
-     * @return Concatenated string
-     */
-    public static String concatString(Collection<String> in, int fromIndex, String sep) {
-        StringBuilder sb = new StringBuilder();
-        int i = 0;
-        for (String tmp : in) {
-            if (fromIndex <= i) {
-                sb.append(tmp).append(sep);
-            }
-            ++i;
         }
         if (sb.length() > 0) {
             sb.setLength(sb.length() - sep.length());
@@ -151,7 +128,7 @@ public class PermissionSplashScreen extends SplashScreenBase
         return ret;
     }
 
-    @DebugLog
+    //@DebugLog
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -171,39 +148,38 @@ public class PermissionSplashScreen extends SplashScreenBase
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
     }
 
-    @DebugLog
+    //@DebugLog
     @Override
     protected void onDestroy() {
         clearRequestNumber();
         super.onDestroy();
     }
 
-    @DebugLog
+    //@DebugLog
     @Override
     protected void onStart() {
         super.onStart();
         requestPermissions(getDeniedPermissions(Arrays.asList(permissionsArray)));
     }
 
-    @DebugLog
+    //@DebugLog
     @Override
     protected void onStop() {
         super.onStop();
     }
 
-    @DebugLog
+    //@DebugLog
     @Override
     protected void onResume() {
         super.onResume();
     }
 
-    @DebugLog
+    //@DebugLog
     @Override
     protected void onPause() {
         super.onPause();
     }
 
-    @SuppressLint("ApplySharedPref")
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
@@ -243,7 +219,6 @@ public class PermissionSplashScreen extends SplashScreenBase
         pendingPermissions.removeAll(denied);
 
         // Will trigger target activity if pending permissions is empty
-        //requestPermissions(pendingPermissions);
         if (!shouldRequestPermissions(pendingPermissions)) {
             startTargetActivity();
         } else {
@@ -251,12 +226,20 @@ public class PermissionSplashScreen extends SplashScreenBase
         }
     }
 
-    @SuppressWarnings("UnusedParameters")
+    /**
+     * Overrive this method to handle case where permissions are granted
+     *
+     * @param granted List of granted permissions
+     */
     protected void onPermissionsGranted(List<String> granted) {
 
     }
 
-    @SuppressWarnings({"WeakerAccess", "EmptyMethod", "UnusedParameters"})
+    /**
+     * Override this method to handle case where permissions are denied
+     *
+     * @param granted List of denied permissions
+     */
     protected void onPermissionsDenied(List<String> granted) {
 
     }
@@ -276,11 +259,10 @@ public class PermissionSplashScreen extends SplashScreenBase
         return ret;
     }
 
-    @SuppressLint("ApplySharedPref")
     private void requestPermissions(Collection<String> permissions) {
         if (shouldRequestPermissions(permissions)) {
             int request = getRequestNumber() + 1;
-            Timber.i("[" + request + "] Requesting permissions : \n" + concatString(permissions, 0, ",\n"));
+            Timber.i("[" + request + "] Requesting permissions : \n" + concatString(permissions, ",\n"));
             pendingPermissions.addAll(permissions);
             //registering the current request to have only one request at a time.
             setRequestNumber(request);
@@ -288,11 +270,18 @@ public class PermissionSplashScreen extends SplashScreenBase
         } else if (isRequestOngoing()) {
             Timber.d("Request is onGoing, waiting for onRequestPermissionsResult");
         } else {
+            // No request ongoing and no need to request permission, starting target activity here
             startTargetActivity();
         }
     }
 
-    private boolean shouldRequestPermissions(Collection<String> permissions) {
+    /**
+     * Called to determine if permission are needed to be asked
+     *
+     * @param permissions Permission list
+     * @return true if request needs to be sent
+     */
+    protected boolean shouldRequestPermissions(Collection<String> permissions) {
         boolean ret = true;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             ret = false;
@@ -317,11 +306,13 @@ public class PermissionSplashScreen extends SplashScreenBase
 
     @SuppressLint("ApplySharedPref")
     private void setRequestNumber(int i) {
+        // We want the pref up to date now, we are using commit instead of apply intentionally
         prefs.edit().putInt(KEY_REQUEST, i).commit();
     }
 
     @SuppressLint("ApplySharedPref")
     private void clearRequestNumber() {
+        // We want the pref up to date now, we are using commit instead of apply intentionally
         prefs.edit().remove(KEY_REQUEST).commit();
     }
 }
